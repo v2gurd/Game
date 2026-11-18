@@ -7,13 +7,13 @@
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080e18;color:#fff;font-family:Tahoma,Arial,sans-serif;touch-action:none;overscroll-behavior:none}canvas{display:block;width:100%;height:100%;outline:0}
 #game{position:fixed;inset:0;background:linear-gradient(#7ba7c8,#d8c6a2)}#hud{position:absolute;inset:0;pointer-events:none}
 .top{position:absolute;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.panel{background:#08111ddd;border:1px solid #ffffff24;backdrop-filter:blur(12px);border-radius:14px;padding:9px 12px;box-shadow:0 8px 28px #0005}.brand{font-size:12px;letter-spacing:2px;color:#a9d7ff;font-weight:bold}.mission{font-size:12px;margin-top:5px;color:#eaf3fb}.stats{display:flex;gap:7px;direction:ltr}.stat{min-width:64px;text-align:center;font-size:10px;color:#9fb3c9}.stat b{display:block;font-size:14px;color:white;margin-top:3px}
+.panel{background:#08111ddd;border:1px solid #ffffff24;backdrop-filter:blur(12px);border-radius:14px;padding:9px 12px;box-shadow:0 8px 28px #0005}.brand{font-size:12px;letter-spacing:2px;color:#a9d7ff;font-weight:bold}.mission{font-size:12px;margin-top:5px;color:#eaf3fb}.stats{display:flex;gap:7px;direction:ltr;align-items:flex-start}.stat.money b{color:#7df0a8}.stat.health b{color:#ff8c8c}.stat.wanted b{color:#ffd36a}.stat{min-width:64px;text-align:center;font-size:10px;color:#9fb3c9}.stat b{display:block;font-size:14px;color:white;margin-top:3px}
 #map{width:88px;height:88px;border-radius:12px;background:#07111dcc;border:1px solid #ffffff33}
 #hint{position:absolute;top:105px;left:50%;transform:translateX(-50%);font-size:11px;color:#fff;background:#07111dbb;padding:7px 12px;border-radius:20px;white-space:nowrap}
 #controls{position:absolute;inset:0;pointer-events:none}.stick{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;background:#07111d66;border:1px solid #ffffff45;pointer-events:auto;touch-action:none}
 #joy{left:22px}.nub{position:absolute;width:48px;height:48px;border-radius:50%;left:37px;top:37px;background:#b9e3ffbb;border:2px solid #fff9;box-shadow:0 3px 15px #0008}
-.actions{position:absolute;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2,66px);gap:10px;pointer-events:auto}
-.action{width:66px;height:58px;border-radius:18px;border:1px solid #ffffff55;background:#101d2dcc;color:#fff;font-weight:bold;font-size:11px;backdrop-filter:blur(8px);touch-action:none}.action.primary{background:#1478c9dd}.action:active{transform:scale(.94);background:#2699f5}
+.actions{position:absolute;right:18px;bottom:calc(16px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,62px);gap:7px;pointer-events:auto}
+.action{width:62px;height:54px;border-radius:18px;border:1px solid #ffffff55;background:#101d2dcc;color:#fff;font-weight:bold;font-size:11px;backdrop-filter:blur(8px);touch-action:none}.action.primary{background:#1478c9dd}.action:active{transform:scale(.94);background:#2699f5}
 #rotate{position:absolute;inset:0;background:#07111df2;display:none;align-items:center;justify-content:center;text-align:center;z-index:5;padding:30px}
 #rotate .card{max-width:300px}.phone{font-size:54px;display:block;margin-bottom:16px;animation:turn 1.8s infinite alternate}@keyframes turn{to{transform:rotate(90deg)}}
 #start{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#07111deF,#102b43dd);padding:20px}
@@ -22,13 +22,13 @@
 #toast{position:absolute;bottom:165px;left:50%;transform:translateX(-50%);padding:9px 15px;border-radius:12px;background:#07111de8;font-size:12px;opacity:0;transition:.25s;white-space:nowrap}
 @media(orientation:portrait){#rotate{display:flex}#start{display:none}}
 @media(orientation:landscape){#rotate{display:none}}
-@media(max-height:430px){.stick{width:100px;height:100px}.nub{left:29px;top:29px}.actions{grid-template-columns:repeat(2,58px)}.action{width:58px;height:48px}.top{top:7px}.panel{padding:6px 9px}#map{width:66px;height:66px}}
+@media(max-height:430px){.stick{width:100px;height:100px}.nub{left:29px;top:29px}.actions{grid-template-columns:repeat(3,54px);gap:5px}.action{width:54px;height:43px}.top{top:7px}.panel{padding:6px 9px}#map{width:66px;height:66px}}
 </style></head>
 <body><div id="game"><canvas id="view"></canvas></div>
-<div id="hud"><div class="top"><div class="panel"><div class="brand">AZAD SHAHR / OPEN WORLD</div><div class="mission" id="mission">به شهر آزاد خوش آمدی — در شهر گشت بزن</div></div><div class="stats"><div class="panel stat">سرعت<b id="speed">۰ km/h</b></div><div class="panel stat">وضعیت<b id="mode">پیاده</b></div><canvas id="map" width="160" height="160"></canvas></div></div><div id="hint">جوی‌استیک: حرکت · کشیدن صفحه: چرخش دوربین · فاصله دوربین ثابت</div>
-<div id="controls"><div class="stick" id="joy"><div class="nub" id="nub"></div></div><div class="actions"><button class="action" id="run">دویدن</button><button class="action primary" id="use">سوار / پیاده</button><button class="action" id="jump">پرش</button><button class="action" id="fire">شلیک</button></div></div><div id="toast"></div></div>
+<div id="hud"><div class="top"><div class="panel"><div class="brand">AZAD SHAHR / OPEN WORLD</div><div class="mission" id="mission">به شهر آزاد خوش آمدی — در شهر گشت بزن</div></div><div class="stats"><div class="panel stat">سرعت<b id="speed">۰ km/h</b></div><div class="panel stat">وضعیت<b id="mode">پیاده</b></div><div class="panel stat money">پول<b id="money">۵۰۰۰ $</b></div><div class="panel stat health">جان<b id="health">۱۰۰٪</b></div><div class="panel stat wanted">تحت تعقیب<b id="wanted">☆☆☆☆☆</b></div><canvas id="map" width="160" height="160"></canvas></div></div><div id="hint">جوی‌استیک: حرکت · کشیدن صفحه: چرخش دوربین · فاصله دوربین ثابت</div>
+<div id="controls"><div class="stick" id="joy"><div class="nub" id="nub"></div></div><div class="actions"><button class="action" id="run">دویدن</button><button class="action primary" id="use">سوار / پیاده</button><button class="action" id="jump">پرش</button><button class="action" id="interact">تعامل</button><button class="action" id="rob">سرقت بانک</button><button class="action" id="fire">شلیک</button></div></div><div id="toast"></div></div>
 <div id="rotate"><div class="card"><span class="phone">▯</span><h2>گوشی را افقی کن</h2><p>این بازی برای نمایشگر افقی طراحی شده است</p></div></div>
-<div id="start"><div class="startcard"><div class="brand">V2GURD GAME STUDIO PRESENTS</div><h1>AZAD SHAHR</h1><p>شهر سه‌بعدی آزاد با عابرهای متحرک، مغازه‌ها و رانندگی. با دو انگشت زوم کن و دوربین را بچرخان.<br>نسخه آزمایشی آفلاین — کنترل لمسی و دوربین سوم‌شخص</p><button id="play">ورود به شهر</button></div></div>
+<div id="start"><div class="startcard"><div class="brand">V2GURD GAME STUDIO PRESENTS</div><h1>AZAD SHAHR</h1><p>شهر آزاد با ترافیک، خودروهای قابل خرید، پلیس، خلافکارها، سرقت بانک و رویدادهای اتفاقی. کنترل لمسی در حالت افقی.<br>نسخه آفلاین آزمایشی — پول، سلامتی، تعقیب پلیس و خودروهای مختلف</p><button id="play">ورود به شهر</button></div></div>
 <script>
 (()=>{
 'use strict';
@@ -91,11 +91,11 @@ function makeCity(){
  }
  for(let r=-120;r<=120;r+=40){
   for(let side of [-1,1]){
-   let tx=r+side*6.25;
+   let tx=r+side*8.2;
    for(let z=-112;z<=112;z+=16){
     if(Math.abs(((z%40)+40)%40-20)>8) tree(tx,z);
    }
-   let tz=r+side*6.25;
+   let tz=r+side*8.2;
    for(let x=-112;x<=112;x+=16){
     if(Math.abs(((x%40)+40)%40-20)>8) tree(x,tz);
    }
@@ -104,7 +104,7 @@ function makeCity(){
  // Street lights beside the sidewalks
  for(let r=-120;r<=120;r+=40){
   for(let side of [-1,1]){
-   let x=r+side*7.35;
+   let x=r+side*9.0;
    for(let z=-100;z<=100;z+=40){
     cylinder(x,0,z,.08,4.6,[.25,.27,.28]);
     box(x,4.6,z,.8,.12,.2,[.94,.82,.53]);
@@ -121,8 +121,25 @@ function matMul(a,b){let o=new Float32Array(16);for(let r=0;r<4;r++)for(let c=0;
 function perspective(fov,asp,n,f){let t=1/Math.tan(fov/2),nf=1/(n-f);return new Float32Array([t/asp,0,0,0,0,t,0,0,0,0,(f+n)*nf,-1,0,0,2*f*n*nf,0])}
 function look(eye,center,up){let z=norm(sub(eye,center)),x=norm(cross(up,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1])}
 const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{let l=Math.hypot(...a)||1;return a.map(v=>v/l)};
-let player={x:0,z:0,y:0,ang:0,vy:0},car={x:7,z:5,ang:0,active:false,speed:0},cameraYaw=0,cameraPitch=.18,camDist=8,run=false,fire=false,jump=false,shots=[],people=[];
-for(let i=0;i<28;i++)people.push({x:(Math.random()-.5)*190,z:(Math.random()-.5)*190,ang:Math.random()*6.28,t:Math.random()*9,criminal:i%8===0});
+let player={x:0,z:0,y:0,ang:0,vy:0,health:100,money:5000,wanted:0},car={x:0,z:-2.7,ang:0,active:false,speed:0,model:'compact',owned:true},cameraYaw=0,cameraPitch=.18,camDist=8,run=false,fire=false,jump=false,shots=[],people=[];
+const carTypes=[
+ {id:'compact',name:'اقتصادی',price:0,color:[.68,.12,.08],speed:17},
+ {id:'sedan',name:'سدان',price:9000,color:[.12,.35,.68],speed:21},
+ {id:'sport',name:'اسپرت',price:26000,color:[.78,.58,.08],speed:31},
+ {id:'luxury',name:'لوکس',price:52000,color:[.12,.14,.17],speed:27},
+ {id:'suv',name:'شاسی‌بلند',price:38000,color:[.22,.42,.25],speed:23}
+];
+let parkedCars=[
+ {x:4.1,z:-1.8,ang:0,model:'sedan',owned:false},
+ {x:-4.1,z:-1.8,ang:0,model:'sport',owned:false},
+ {x:0,z:4.0,ang:Math.PI,model:'suv',owned:false},
+ {x:8.5,z:0,ang:Math.PI/2,model:'luxury',owned:false}
+];
+for(let i=0;i<34;i++){
+ let p={x:(Math.random()-.5)*180,z:(Math.random()-.5)*180,ang:Math.random()*6.28,t:Math.random()*9,criminal:i%9===0,police:i%17===0,state:'walk',hp:100,inside:false,home:null};
+ people.push(p);
+}
+let cops=[],robbery={active:false,time:0,cooldown:0},eventTimer=18,activeEvent=null,gameClock=0;
 let keys={},joy={x:0,y:0},last=0,started=false;
 function dynamicMesh(){
  let v=[],c=[];const oldV=verts,oldC=colors;verts=v;colors=c;
@@ -170,8 +187,19 @@ function dynamicMesh(){
      for(let k=0;k<5;k++){let a=k*Math.PI*2/5;box(wx+sx*.205,.38+Math.sin(a)*.12,wz+Math.cos(a)*.12,.035,.045,.045,[.8,.82,.83]);}
    }
  }
- // varied pedestrians and a few visibly distinct criminals
- for(let p of people)person(p.x,p.z,p.ang,p.t,p.criminal?[.42,.075,.07]:[.12,.34,.22],[.12,.13,.16],true);
+ // Multi-class parked vehicles
+ function vehicle(v){
+  let spec=carTypes.find(t=>t.id===v.model)||carTypes[0],col=spec.color;
+  box(v.x,.38,v.z,2.15,.62,4.05,col);box(v.x,.88,v.z-.18,1.62,.72,1.95,[.1,.19,.25]);
+  box(v.x,.48,v.z+2.02,1.8,.18,.08,[.96,.78,.42]);box(v.x,.48,v.z-2.02,1.8,.18,.08,[.85,.08,.05]);
+  for(let sx of [-1,1])for(let sz of [-1,1]){let wx=v.x+sx*.98,wz=v.z+sz*1.28;box(wx,.36,wz,.32,.66,.68,[.025,.028,.03]);box(wx+sx*.17,.36,wz,.045,.3,.32,[.55,.58,.6])}
+ }
+ for(let v of parkedCars)vehicle(v);
+ if(!car.active)vehicle(car);
+ for(let p of cops)person(p.x,p.z,p.ang,p.t,[.035,.09,.34],[.06,.07,.12],true);
+ // Pedestrians and criminals
+ for(let p of people)person(p.x,p.z,p.ang,p.t,p.criminal?[.48,.055,.045]:[.12,.34,.22],[.12,.13,.16],p.state!=='arrested');
+
  // projectile tracers
  for(let s of shots){sphere(s.x,.9,s.z,.09,[1,.72,.18]);}
  // Storefronts are generated on building facades, not in the street.
@@ -189,51 +217,127 @@ function hitsBuilding(x,z,radius){
  return false;
 }
 
-function update(dt){
- let forward=-(joy.y||((keys.ArrowUp||keys.w)?1:0)-((keys.ArrowDown||keys.s)?1:0)),side=(joy.x!==0?-joy.x:0)||((keys.ArrowRight||keys.d)?1:0)-((keys.ArrowLeft||keys.a)?1:0);
- let boost=run||keys.Shift,turn=side*.0;
- if(car.active){car.ang+=side*dt*(.65+Math.min(1,Math.abs(car.speed)/8)*1.5)*Math.sign(car.speed||1);car.speed+=(forward*23-car.speed)*Math.min(1,dt*2.1);let nextCarX=car.x+Math.sin(car.ang)*car.speed*dt;
-  let nextCarZ=car.z+Math.cos(car.ang)*car.speed*dt;
-  if(!hitsBuilding(nextCarX,nextCarZ,1.35)){
-   car.x=clamp(nextCarX,-119,119);
-   car.z=clamp(nextCarZ,-119,119);
-  }else{
-   car.speed=0;
-  }
-  car.speed*=Math.pow(.985,dt*60);
-  player.x=car.x;player.z=car.z;document.getElementById('speed').textContent=Math.round(Math.abs(car.speed)*4)+' km/h';}
- else{let sp=boost?8:4.5;let dx=Math.sin(cameraYaw)*forward-Math.cos(cameraYaw)*side, dz=Math.cos(cameraYaw)*forward+Math.sin(cameraYaw)*side;let l=Math.hypot(dx,dz)||1;let nextX=clamp(player.x+dx/l*sp*dt,-119,119);
-  let nextZ=clamp(player.z+dz/l*sp*dt,-119,119);
-  if(!hitsBuilding(nextX,nextZ,.48)){
-   player.x=nextX;player.z=nextZ;
-  }else{
-   if(!hitsBuilding(nextX,player.z,.48)) player.x=nextX;
-   if(!hitsBuilding(player.x,nextZ,.48)) player.z=nextZ;
-  }
-  if(Math.hypot(dx,dz)>.08)player.ang=Math.atan2(dx,dz);document.getElementById('speed').textContent='۰ km/h';}
- if(jump&&player.y===0)player.vy=7.5;jump=false;player.vy-=18*dt;player.y=Math.max(0,player.y+player.vy*dt);if(player.y===0)player.vy=0;
- for(let p of people){p.t+=dt;if(Math.random()<.01)p.ang+=(Math.random()-.5)*2;p.x+=Math.sin(p.ang)*dt*.7;p.z+=Math.cos(p.ang)*dt*.7;if(p.criminal&&Math.hypot(p.x-player.x,p.z-player.z)<12&&Math.random()<.03)toast('مراقب باش! فرد مشکوک نزدیک توست');}
- shots=shots.filter(s=>{s.x+=s.dx*dt*25;s.z+=s.dz*dt*25;s.life-=dt;return s.life>0});
- if(fire&&!car.active){if(!update.lastFire||performance.now()-update.lastFire>320){shots.push({x:player.x,z:player.z,dx:Math.sin(player.ang),dz:Math.cos(player.ang),life:.5});update.lastFire=performance.now();}}
- document.getElementById('mode').textContent=car.active?'رانندگی':'پیاده';
+function near(a,b,dist){return Math.hypot(a.x-b.x,a.z-b.z)<dist}
+function buildingCollision(x,z,r){
+ for(const b of buildings){let nx=clamp(x,b.x-b.w/2,b.x+b.w/2),nz=clamp(z,b.z-b.d/2,b.z+b.d/2);if((x-nx)**2+(z-nz)**2<r*r)return true;}
+ let nx=clamp(x,8,18),nz=clamp(z,8,18);if((x-nx)**2+(z-nz)**2<r*r)return true;
+ return false;
 }
-function minimap(){let c=document.getElementById('map').getContext('2d');c.clearRect(0,0,160,160);c.fillStyle='#172b34';c.fillRect(0,0,160,160);c.strokeStyle='#66757b';c.lineWidth=7;for(let i=0;i<160;i+=32){c.beginPath();c.moveTo(i,0);c.lineTo(i,160);c.stroke();c.beginPath();c.moveTo(0,i);c.lineTo(160,i);c.stroke()}c.fillStyle='#f3d06c';for(let p of people)c.fillRect(80+(p.x-player.x)*.55,80+(p.z-player.z)*.55,3,3);c.fillStyle='#55d9ff';c.beginPath();c.arc(80,80,5,0,7);c.fill()}
+function spawnCop(){
+ let a=Math.random()*Math.PI*2,d=22+Math.random()*10;
+ cops.push({x:player.x+Math.sin(a)*d,z:player.z+Math.cos(a)*d,ang:a,t:0,police:true,criminal:false,hp:100,state:'chase'});
+}
+function raiseWanted(n=1){player.wanted=clamp(player.wanted+n,0,5);while(cops.length<player.wanted*2)spawnCop();toast('سطح تعقیب پلیس افزایش یافت')}
+function updateHUD(){
+ document.getElementById('money').textContent=Math.floor(player.money).toLocaleString('fa-IR')+' $';
+ document.getElementById('health').textContent=Math.ceil(player.health).toLocaleString('fa-IR')+'٪';
+ document.getElementById('wanted').textContent='★'.repeat(player.wanted)+'☆'.repeat(5-player.wanted);
+}
+function nearestCar(){
+ return [car,...parkedCars].filter(c=>c!==car||!car.active).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];
+}
+function interact(){
+ if(car.active){car.active=false;player.x=car.x+2;player.z=car.z;car.speed=0;toast('از خودرو پیاده شدی');return}
+ let target=nearestCar(),dist=target?Math.hypot(target.x-player.x,target.z-player.z):999;
+ if(target&&dist<5){
+  if(target===car||target.owned){car.active=true;car.model=target.model;car.x=target.x;car.z=target.z;car.ang=target.ang;toast('سوار خودرو شدی');return}
+  let type=carTypes.find(t=>t.id===target.model);
+  if(type&&player.money>=type.price){player.money-=type.price;target.owned=true;car.active=true;car.model=target.model;car.x=target.x;car.z=target.z;car.ang=target.ang;toast(type.name+' خریداری شد و سوار شدی');updateHUD()}
+  else toast('پول کافی نیست؛ قیمت: '+(type?type.price:0)+' دلار');
+  return;
+ }
+ if(Math.hypot(player.x-13,player.z-7)<7){toast('به بانک رسیدی؛ دکمه سرقت بانک را بزن');return}
+ toast('به خودرو یا محل قابل تعامل نزدیک شو');
+}
+function startRobbery(){
+ if(car.active){toast('برای سرقت باید پیاده باشی');return}
+ if(Math.hypot(player.x-13,player.z-7)>7){toast('برای سرقت به ورودی بانک نزدیک شو');return}
+ if(robbery.cooldown>0){toast('بانک فعلاً تحت مراقبت است');return}
+ if(robbery.active){toast('سرقت در حال انجام است؛ زنده بمان');return}
+ robbery.active=true;robbery.time=0;raiseWanted(3);toast('آژیر بانک فعال شد! پلیس در راه است');
+}
+function randomEvent(){
+ const events=[
+  ()=>{let p=people.find(q=>q.criminal);if(p){p.state='rob';toast('گزارش سرقت خیابانی؛ خلافکارها در شهر فعال شدند')}},
+  ()=>{player.money+=1200;toast('اتفاق خوب: کیف پول پیدا کردی +۱۲۰۰ دلار')},
+  ()=>{player.health=clamp(player.health+18,0,100);toast('امدادگر کمکت کرد؛ جانت افزایش یافت')},
+  ()=>{raiseWanted(1);toast('گزارش مشکوک؛ پلیس به محدوده اعزام شد')},
+  ()=>{let p=people.find(q=>!q.criminal&&!q.police);if(p){p.state='panic';toast('صدای انفجار! مردم وحشت‌زده فرار می‌کنند')}}
+ ];
+ events[Math.floor(Math.random()*events.length)]();
+}
+function update(dt){
+ gameClock+=dt;
+ // Joystick axes are screen-relative: up is forward and right is right.
+ const forward=Math.abs(joy.y)>.08?-joy.y:((keys.ArrowUp||keys.w)?1:0)-((keys.ArrowDown||keys.s)?1:0);
+ const side=Math.abs(joy.x)>.08?joy.x:((keys.ArrowRight||keys.d)?1:0)-((keys.ArrowLeft||keys.a)?1:0);
+ let boost=run||keys.Shift;
+ if(car.active){
+  let type=carTypes.find(t=>t.id===car.model)||carTypes[0];
+  car.ang+=side*dt*(.8+Math.min(1,Math.abs(car.speed)/10)*1.25)*Math.sign(car.speed||1);
+  car.speed=clamp(car.speed+forward*type.speed*dt*1.3,-type.speed*.42,type.speed);
+  let nx=car.x+Math.sin(car.ang)*car.speed*dt,nz=car.z+Math.cos(car.ang)*car.speed*dt;
+  if(!buildingCollision(nx,nz,1.55)){car.x=clamp(nx,-119,119);car.z=clamp(nz,-119,119)}else car.speed*=-.16;
+  for(let p of [...people,...cops])if(Math.hypot(p.x-car.x,p.z-car.z)<1.65&&Math.abs(car.speed)>5){p.hp-=Math.abs(car.speed)*2;p.state='panic';player.wanted=Math.max(player.wanted,2);car.speed*=.65}
+  car.speed*=Math.pow(.985,dt*60);player.x=car.x;player.z=car.z;
+  document.getElementById('speed').textContent=Math.round(Math.abs(car.speed)*4).toLocaleString('fa-IR')+' km/h';
+ }else{
+  let sp=boost?8:4.5,dx=Math.sin(cameraYaw)*forward+Math.cos(cameraYaw)*side,dz=Math.cos(cameraYaw)*forward-Math.sin(cameraYaw)*side,l=Math.hypot(dx,dz)||1;
+  let nx=clamp(player.x+dx/l*sp*dt,-119,119),nz=clamp(player.z+dz/l*sp*dt,-119,119);
+  if(!buildingCollision(nx,nz,.52)){player.x=nx;player.z=nz}else{if(!buildingCollision(nx,player.z,.52))player.x=nx;if(!buildingCollision(player.x,nz,.52))player.z=nz}
+  if(Math.hypot(dx,dz)>.08)player.ang=Math.atan2(dx,dz);
+  document.getElementById('speed').textContent='۰ km/h';
+ }
+ if(jump&&!car.active&&player.y===0)player.vy=7.5;jump=false;player.vy-=18*dt;player.y=Math.max(0,player.y+player.vy*dt);if(player.y===0)player.vy=0;
+ // Pedestrians cannot walk through buildings; they turn and choose another route.
+ for(let p of people){
+  p.t+=dt;
+  if(p.state==='panic'){p.ang=Math.atan2(p.x-player.x,p.z-player.z);p.stateTimer=(p.stateTimer||0)+dt;if(p.stateTimer>6){p.state='walk';p.stateTimer=0}}
+  else if(Math.random()<.012)p.ang+=(Math.random()-.5)*2.2;
+  let speed=p.criminal?1.0:.68,px=p.x+Math.sin(p.ang)*speed*dt,pz=p.z+Math.cos(p.ang)*speed*dt;
+  if(buildingCollision(px,pz,.42))p.ang+=Math.PI*(.55+Math.random()*.35);else{p.x=clamp(px,-119,119);p.z=clamp(pz,-119,119)}
+  if(p.criminal&&Math.hypot(p.x-player.x,p.z-player.z)<10&&Math.random()<.002)toast('خلافکار مشکوکی نزدیک توست');
+  if(p.criminal&&p.hp>0){p.crimeWait=(p.crimeWait||4)-dt;if(p.crimeWait<=0){let victim=people.find(q=>q!==p&&!q.criminal&&q.hp>0&&Math.hypot(q.x-p.x,q.z-p.z)<2.2);if(victim){victim.state='panic';p.state='rob';p.crimeWait=18;spawnCop();toast('سرقت خیابانی! پلیس برای دستگیری خلافکار اعزام شد')}else p.crimeWait=3+Math.random()*5}}
+ }
+ // Police chase the player or arrest criminals.
+ for(let cop of cops){
+  cop.t+=dt;let target=player;
+  let crim=people.filter(p=>p.criminal&&p.hp>0).sort((a,b)=>Math.hypot(a.x-cop.x,a.z-cop.z)-Math.hypot(b.x-cop.x,b.z-cop.z))[0];
+  if(crim&&Math.hypot(crim.x-cop.x,crim.z-cop.z)<30&&(player.wanted===0||Math.hypot(player.x-cop.x,player.z-cop.z)>18))target=crim;
+  let a=Math.atan2(target.x-cop.x,target.z-cop.z),d=Math.hypot(target.x-cop.x,target.z-cop.z);cop.ang=a;
+  if(d>2.2){let nx=cop.x+Math.sin(a)*dt*4.2,nz=cop.z+Math.cos(a)*dt*4.2;if(!buildingCollision(nx,nz,.5)){cop.x=nx;cop.z=nz}}
+  if(target===crim&&d<2.4){crim.hp=0;crim.state='arrested';toast('پلیس یک خلافکار را دستگیر کرد')}
+  if(target===player&&d<2.3&&player.wanted>0){
+   player.health-=dt*7;
+   if(player.health<=0){player.health=0;player.money=Math.max(0,player.money-500);player.x=0;player.z=-12;player.wanted=0;cops=[];car.active=false;robbery.active=false;toast('دستگیر شدی؛ ۵۰۰ دلار جریمه پرداخت کردی')}
+  }
+ }
+ people=people.filter(p=>p.hp>0||p.state==='arrested');
+ shots=shots.filter(s=>{s.x+=s.dx*dt*25;s.z+=s.dz*dt*25;s.life-=dt;let hit=people.find(p=>Math.hypot(p.x-s.x,p.z-s.z)<.8&&p.hp>0);if(hit){hit.hp-=100;hit.state='down';raiseWanted(2);return false}return s.life>0});
+ if(fire&&!car.active&&(!update.lastFire||performance.now()-update.lastFire>360)){shots.push({x:player.x,z:player.z,dx:Math.sin(player.ang),dz:Math.cos(player.ang),life:.65});update.lastFire=performance.now()}
+ if(robbery.active){robbery.time+=dt;if(robbery.time>14){player.money+=18000;robbery.active=false;robbery.cooldown=90;toast('سرقت موفق! ۱۸٬۰۰۰ دلار به دست آوردی؛ فرار کن')}}
+ if(robbery.cooldown>0)robbery.cooldown-=dt;
+ if(player.wanted>0&&gameClock%1<dt&&Math.hypot(player.x,player.z)>55){player.wanted=Math.max(0,player.wanted-1);cops.splice(0,Math.min(2,cops.length))}
+ eventTimer-=dt;if(eventTimer<=0){randomEvent();eventTimer=35+Math.random()*45}
+ updateHUD();document.getElementById('mode').textContent=car.active?'رانندگی':'پیاده';
+}
+function minimap(){let c=document.getElementById('map').getContext('2d');c.clearRect(0,0,160,160);c.fillStyle='#172b34';c.fillRect(0,0,160,160);c.strokeStyle='#66757b';c.lineWidth=7;for(let i=0;i<160;i+=32){c.beginPath();c.moveTo(i,0);c.lineTo(i,160);c.stroke();c.beginPath();c.moveTo(0,i);c.lineTo(160,i);c.stroke()}c.fillStyle='#f3d06c';for(let p of people)c.fillRect(80+(p.x-player.x)*.55,80+(p.z-player.z)*.55,3,3);c.fillStyle='#5da8ff';for(let p of cops)c.fillRect(80+(p.x-player.x)*.55,80+(p.z-player.z)*.55,5,5);c.fillStyle='#e8e8e8';for(let v of parkedCars)c.fillRect(80+(v.x-player.x)*.55,80+(v.z-player.z)*.55,4,4);c.fillStyle='#55d9ff';c.beginPath();c.arc(80,80,5,0,7);c.fill()}
 function frame(t){let dt=Math.min(.04,(t-last)/1000||.016);last=t;if(started)update(dt);let w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w*devicePixelRatio||canvas.height!==h*devicePixelRatio){canvas.width=w*devicePixelRatio;canvas.height=h*devicePixelRatio;gl.viewport(0,0,canvas.width,canvas.height)}
  let target=car.active?[car.x,1,car.z]:[player.x,1+player.y,player.z],yaw=cameraYaw+(car.active?car.ang:player.ang)*.12;
  let eye=[target[0]-Math.sin(yaw)*camDist*Math.cos(cameraPitch),target[1]+camDist*Math.sin(cameraPitch)+2,target[2]-Math.cos(yaw)*camDist*Math.cos(cameraPitch)];
  let vp=matMul(perspective(PI/3,w/h,.1,250),look(eye,target,[0,1,0]));gl.uniformMatrix4fv(loc.vp,false,vp);
  gl.clearColor(.48,.66,.77,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.enableVertexAttribArray(loc.p);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,cb);gl.enableVertexAttribArray(loc.c);gl.vertexAttribPointer(loc.c,3,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLES,0,staticV.length/3);
  let [dv,dc]=dynamicMesh();drawMesh(dv,dc);minimap();requestAnimationFrame(frame)}
-requestAnimationFrame(frame);
+requestAnimationFrame(frame);updateHUD();
 document.getElementById('play').onclick=()=>{started=true;document.getElementById('start').style.display='none';toast('به شهر آزاد خوش آمدی')};
 document.getElementById('run').onpointerdown=()=>run=true;document.getElementById('run').onpointerup=()=>run=false;document.getElementById('run').onpointerleave=()=>run=false;
-document.getElementById('jump').onpointerdown=()=>jump=true;document.getElementById('fire').onpointerdown=()=>fire=true;document.getElementById('fire').onpointerup=()=>fire=false;
-document.getElementById('use').onclick=()=>{if(!car.active&&Math.hypot(player.x-car.x,player.z-car.z)<5){car.active=true;toast('سوار ماشین شدی')}else if(car.active){car.active=false;player.x=car.x+2;toast('از ماشین پیاده شدی')}else toast('برای سوار شدن به ماشین نزدیک شو')};
+document.getElementById('jump').onpointerdown=()=>jump=true;document.getElementById('fire').onpointerdown=()=>fire=true;document.getElementById('fire').onpointerup=()=>fire=false;document.getElementById('fire').onpointercancel=()=>fire=false;document.getElementById('fire').onpointerleave=()=>fire=false;
+document.getElementById('use').onclick=interact;document.getElementById('interact').onclick=interact;document.getElementById('rob').onclick=startRobbery;
 const joyEl=document.getElementById('joy'),nub=document.getElementById('nub');let joyId=null;
 joyEl.onpointerdown=e=>{joyId=e.pointerId;joyEl.setPointerCapture(joyId);moveJoy(e)};joyEl.onpointermove=e=>{if(e.pointerId===joyId)moveJoy(e)};joyEl.onpointerup=e=>{if(e.pointerId===joyId){joyId=null;joy.x=joy.y=0;nub.style.transform='translate(0,0)'}};joyEl.onpointercancel=joyEl.onpointerup;
 function moveJoy(e){let r=joyEl.getBoundingClientRect(),x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2),l=Math.hypot(x,y),m=37;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;nub.style.transform=`translate(${x}px,${y}px)`}
 // Camera distance is fixed by the single camDist value declared above.
-let drag=null;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,id:e.pointerId}});canvas.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId){let dx=e.clientX-drag.x;cameraYaw-=dx*.008;cameraPitch=clamp(cameraPitch+(e.clientY-drag.y)*.003,-.1,.65);drag.x=e.clientX;drag.y=e.clientY}});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+let drag=null;canvas.addEventListener('wheel',e=>e.preventDefault(),{passive:false});canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,id:e.pointerId}});canvas.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId){let dx=e.clientX-drag.x;cameraYaw-=dx*.008;cameraPitch=clamp(cameraPitch+(e.clientY-drag.y)*.003,-.1,.65);drag.x=e.clientX;drag.y=e.clientY}});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){jump=true;e.preventDefault()}if(e.key.toLowerCase()==='e')document.getElementById('use').click();if(e.key.toLowerCase()==='f')fire=true});window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key.toLowerCase()==='f')fire=false});
 })();
 </script></body></html>
