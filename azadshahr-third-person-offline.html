@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101820"><title>آزادشهر | نمای سوم‌شخص آفلاین</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17232a;color:#fff;font-family:Tahoma,Arial,sans-serif;touch-action:none}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none}
+#top{position:absolute;top:env(safe-area-inset-top,7px);left:8px;right:8px;display:flex;justify-content:space-between;gap:7px;align-items:flex-start}
+.panel{background:#081018d9;border:1px solid #ffffff30;border-radius:12px;padding:8px 10px;box-shadow:0 4px 18px #0006}
+#brand{font-weight:900;color:#91edb7;font-size:13px}#stats{font-size:10px;line-height:1.8;text-align:right}
+#mission{position:absolute;top:68px;right:8px;font-size:10px;line-height:1.8;max-width:155px}
+#mapbox{position:absolute;top:68px;left:8px;width:90px;height:90px;overflow:hidden;border-radius:10px;border:1px solid #fff8;background:#101a20}
+#map{width:100%;height:100%}
+#controls{position:absolute;bottom:calc(9px + env(safe-area-inset-bottom,0px));left:0;right:0;height:140px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 13px}
+#stick{width:132px;height:132px;border-radius:50%;border:1px solid #ffffff55;background:#0a1724a8;position:relative;pointer-events:auto;touch-action:none}
+#nub{position:absolute;width:52px;height:52px;left:39px;top:39px;border-radius:50%;background:#dbe9ef55;border:2px solid #ffffff9a}
+#buttons{display:grid;grid-template-columns:repeat(2,60px);grid-template-rows:repeat(2,55px);gap:8px;pointer-events:auto}
+button{border:1px solid #ffffff70;background:#0b1826df;color:white;border-radius:15px;font-weight:bold;font-size:11px;touch-action:none}
+button:active{background:#297557}
+#hint{position:absolute;bottom:158px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;color:#e1e8e9;background:#071019b9;border-radius:20px;padding:6px 9px}
+#toast{position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);background:#08131eec;border:1px solid #ffffff45;padding:9px 14px;border-radius:10px;font-size:12px;opacity:0;transition:.2s}
+#toast.show{opacity:1}
+#start{position:fixed;inset:0;z-index:5;background:radial-gradient(ellipse at center,#314d55,#071017 75%);display:grid;place-items:center;padding:20px}
+#card{width:min(420px,100%);background:#09151feF;border:1px solid #ffffff35;border-radius:23px;padding:25px 20px;text-align:center;box-shadow:0 20px 70px #000b}
+#card h1{font-size:34px;color:#91edb7;margin:9px}#card p{font-size:12px;color:#c4d0d4;line-height:2}
+#go{width:100%;padding:14px;background:linear-gradient(110deg,#85e9a9,#18a879);color:#052015;border:0;border-radius:13px;font-size:15px}
+@media(min-width:800px){#controls{opacity:.8}#hint{bottom:12px}}
+</style></head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div id="top"><div class="panel"><div id="brand">آزادشهر · نمای سوم‌شخص</div><div style="font-size:9px;color:#aab9bf">جهان‌باز آفلاین</div></div><div class="panel" id="stats">پول: <b id="cash">۲۵۰۰</b><br>سلامت: <b id="hp">۱۰۰</b><br>وضعیت: <b id="mode">پیاده</b><br>پلیس: <b id="wanted">☆☆☆☆☆</b></div></div>
+ <div id="mission" class="panel">گشت آزاد<br>در شهر بگرد و ماشین پیدا کن</div>
+ <div id="mapbox"><canvas id="map" width="120" height="120"></canvas></div>
+ <div id="toast"></div>
+ <div id="hint">جوی‌استیک حرکت · دکمه شلیک · سوار شدن به ماشین</div>
+ <div id="controls"><div id="stick"><div id="nub"></div></div><div id="buttons"><button id="shoot">شلیک</button><button id="enter">سوار</button><button id="sprint">دویدن</button><button id="missionBtn">مأموریت</button></div></div>
+</div>
+<div id="start"><div id="card"><div style="font-size:10px;letter-spacing:4px;color:#91edb7">OFFLINE OPEN WORLD</div><h1>آزادشهر</h1><p>این نسخه از پشت شخصیت نمایش داده می‌شود؛ دوربین پشت سر تو حرکت می‌کند، نه از بالا.<br>شهر، ماشین‌ها، عابرها، خلافکارها، پلیس و تیراندازی در یک فایل آفلاین.</p><button id="go">ورود به شهر</button><p style="font-size:10px;color:#80949c">نسخه سبک موبایلی با گرافیک سه‌بعدی‌نما؛ بازسازی کامل GTA V نیست.</p></div></div>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),map=document.getElementById('map'),mx=map.getContext('2d');
+let W,H,D=1,started=false,last=0,toastT=0;
+function resize(){D=Math.min(devicePixelRatio||1,1.7);W=innerWidth;H=innerHeight;canvas.width=W*D;canvas.height=H*D;ctx.setTransform(D,0,0,D,0,0)}addEventListener('resize',resize);resize();
+const SIZE=2160,BLK=180,ROAD=66;
+const player={x:990,z:990,a:0,hp:100,cash:2500,wanted:0,car:null};
+let cars=[],npcs=[],police=[],shots=[],mission=null;
+const rnd=(a,b)=>a+Math.random()*(b-a),choose=a=>a[Math.floor(Math.random()*a.length)],clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const colors=['#b84035','#286b91','#d3a83e','#deded8','#447b5a','#79549b','#252c32'];
+function car(x,z,pol=false){return{x,z,a:rnd(0,6.28),speed:0,color:pol?'#e7e9e8':choose(colors),pol,hp:100}}
+for(let i=0;i<40;i++){let x=rnd(40,SIZE-40),z=rnd(40,SIZE-40);if(Math.random()<.5)x=Math.floor(x/BLK)*BLK+BLK/2;else z=Math.floor(z/BLK)*BLK+BLK/2;cars.push(car(x,z))}
+function npc(type){return{x:rnd(30,SIZE-30),z:rnd(30,SIZE-30),a:rnd(0,6.28),spd:rnd(12,23),type,hp:60,color:type==='thief'?'#a83b31':choose(['#c6a27f','#d0d4d4','#7796a2','#b4a06e','#9b82aa'])}}
+for(let i=0;i<85;i++)npcs.push(npc(Math.random()<.15?'thief':'civil'));
+const keys={};let joy={x:0,y:0},sprint=false;
+function toast(s){let e=document.getElementById('toast');e.textContent=s;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),1500)}
+function stats(){document.getElementById('cash').textContent=player.cash.toLocaleString('fa-IR');document.getElementById('hp').textContent=Math.ceil(player.hp).toLocaleString('fa-IR');document.getElementById('mode').textContent=player.car?'رانندگی':'پیاده';document.getElementById('wanted').textContent='★'.repeat(player.wanted)+'☆'.repeat(5-player.wanted)}
+const stick=document.getElementById('stick'),nub=document.getElementById('nub');let sid=null;
+function moveJoy(e){let r=stick.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,l=Math.hypot(x,y),m=41;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;nub.style.transform=`translate(${x}px,${y}px)`}
+stick.onpointerdown=e=>{sid=e.pointerId;stick.setPointerCapture(sid);moveJoy(e)};stick.onpointermove=e=>{if(e.pointerId===sid)moveJoy(e)};function endJoy(){sid=null;joy.x=joy.y=0;nub.style.transform=''}stick.onpointerup=endJoy;stick.onpointercancel=endJoy;
+document.getElementById('sprint').onpointerdown=()=>sprint=true;['pointerup','pointercancel','pointerleave'].forEach(ev=>document.getElementById('sprint').addEventListener(ev,()=>sprint=false));
+function enterCar(){if(player.car){player.x=player.car.x+Math.cos(player.car.a+Math.PI/2)*36;player.z=player.car.z+Math.sin(player.car.a+Math.PI/2)*36;player.car.occupied=false;player.car=null;toast('پیاده شدی');stats();return}let c=null,dist=75;for(let v of cars){let d=Math.hypot(v.x-player.x,v.z-player.z);if(d<dist){dist=d;c=v}}if(c){c.occupied=true;player.car=c;toast('سوار ماشین شدی')}else toast('به ماشین نزدیک شو');stats()}
+document.getElementById('enter').onclick=enterCar;
+function fire(){let a=player.car?player.car.a:player.a;shots.push({x:player.x+Math.cos(a)*25,z:player.z+Math.sin(a)*25,vx:Math.cos(a)*390,vz:Math.sin(a)*390,t:.8});player.wanted=clamp(player.wanted+1,0,5);stats()}
+document.getElementById('shoot').onpointerdown=fire;
+function startMission(){if(mission){toast('مأموریت فعلی را تمام کن');return}mission=choose(npcs.filter(n=>n.type==='thief'));if(!mission){mission=npc('thief');npcs.push(mission)}document.getElementById('mission').innerHTML='مأموریت: خلافکار را پیدا کن<br><span style="color:#ffc65b">نشان قرمز روی نقشه</span>';toast('خلافکار را پیدا کن')}
+document.getElementById('missionBtn').onclick=startMission;
+function hit(n){n.hp-=45;if(n.hp<=0){npcs=npcs.filter(q=>q!==n);if(n.type==='thief'){player.cash+=500;toast('خلافکار متوقف شد +۵۰۰');if(n===mission){mission=null;player.cash+=1000;document.getElementById('mission').textContent='مأموریت انجام شد +۱۰۰۰'}}else{player.wanted=clamp(player.wanted+1,0,5);toast('به عابر آسیب زدی!')}if(Math.random()<.25)npcs.push(npc(Math.random()<.3?'thief':'civil'));stats()}}
+function update(dt){let x=joy.x,y=joy.y;if(player.car){let c=player.car;c.speed+=-y*230*dt;c.speed*=Math.pow(.965,dt*60);c.speed=clamp(c.speed,-110,220);c.a+=x*dt*(.8+Math.abs(c.speed)*.008)*(c.speed<0?-1:1);c.x+=Math.cos(c.a)*c.speed*dt;c.z+=Math.sin(c.a)*c.speed*dt;c.x=clamp(c.x,10,SIZE-10);c.z=clamp(c.z,10,SIZE-10);player.x=c.x;player.z=c.z}
+ else{let l=Math.hypot(x,y);if(l>.08){player.a=Math.atan2(x,-y);let sp=sprint?145:88;player.x+=x/l*sp*dt;player.z+=y/l*sp*dt}player.x=clamp(player.x,10,SIZE-10);player.z=clamp(player.z,10,SIZE-10)}
+ for(let n of npcs){n.a+=rnd(-.12,.12)*dt*4;n.x+=Math.cos(n.a)*n.spd*dt;n.z+=Math.sin(n.a)*n.spd*dt;if(n.x<15||n.x>SIZE-15||n.z<15||n.z>SIZE-15)n.a+=Math.PI}
+ if(player.wanted&&Math.random()<dt*.18&&police.length<player.wanted+1){let a=rnd(0,6.28);police.push({x:player.x+Math.cos(a)*360,z:player.z+Math.sin(a)*360,a:0,speed:100,pol:true})}
+ for(let p of police){let a=Math.atan2(player.z-p.z,player.x-p.x);p.a=a;p.x+=Math.cos(a)*p.speed*dt;p.z+=Math.sin(a)*p.speed*dt;if(Math.hypot(player.x-p.x,player.z-p.z)<28){player.hp-=dt*5;if(player.hp<=0){player.hp=100;player.wanted=0;police=[];player.cash=Math.max(0,player.cash-300);toast('بازداشت شدی؛ جریمه ۳۰۰')}stats()}}
+ for(let b of shots){b.x+=b.vx*dt;b.z+=b.vz*dt;b.t-=dt;for(let n of npcs){if(Math.hypot(b.x-n.x,b.z-n.z)<17){hit(n);b.t=0;break}}}shots=shots.filter(b=>b.t>0);
+}
+function camera(){let fx=Math.cos(player.a),fz=Math.sin(player.a),dist=player.car?230:205;return{x:player.x-fx*dist,z:player.z-fz*dist,fx,fz}}
+function project(x,y,z,c){let dx=x-c.x,dz=z-c.z;let depth=dx*c.fx+dz*c.fz,side=dx*(-c.fz)+dz*c.fx;if(depth<18)return null;let focal=H*.93;return{x:W/2+side*focal/(depth+70),y:H*.48+(y-75)*focal/(depth+70),s:focal/(depth+70)}}
+function poly(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill()}
+function drawGround(c){ctx.fillStyle='#78905a';ctx.fillRect(0,0,W,H);let near=40,far=1350;
+ // perspective road strips crossing city grid
+ for(let k=-8;k<=8;k++){let z0=player.z+ c.fz*near +(-c.fz)*k*BLK, x0=player.x+c.fx*near+c.fz*k*BLK;let z1=player.z+c.fz*far+(-c.fz)*k*BLK,x1=player.x+c.fx*far+c.fz*k*BLK;let p1=project(x0-(-c.fz)*ROAD/2,0,z0-c.fx*ROAD/2,c),p2=project(x0+(-c.fz)*ROAD/2,0,z0+c.fx*ROAD/2,c),p3=project(x1+(-c.fz)*ROAD/2,0,z1+c.fx*ROAD/2,c),p4=project(x1-(-c.fz)*ROAD/2,0,z1-c.fx*ROAD/2,c);if(p1&&p2&&p3&&p4)poly([p1,p2,p3,p4],'#353b3c')}
+ // transverse roads as broad perspective bars
+ for(let d=180;d<1450;d+=BLK){let z=player.z+c.fz*d,x=player.x+c.fx*d;let a=project(x-c.fz*BLK/2,0,z+c.fx*BLK/2,c),b=project(x+c.fz*BLK/2,0,z-c.fx*BLK/2,c),cc=project(x+c.fz*BLK/2,0,z-c.fx*BLK/2,c),dd=project(x-c.fz*BLK/2,0,z+c.fx*BLK/2,c);if(a&&b){let w1=project(x-c.fz*ROAD/2,0,z+c.fx*ROAD/2,c),w2=project(x+c.fz*ROAD/2,0,z-c.fx*ROAD/2,c);if(w1&&w2){ctx.strokeStyle='#d2c17d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(w1.x,w1.y);ctx.lineTo(w2.x,w2.y);ctx.stroke()}}}
+}
+function drawBuilding(x,z,w,d,h,color,c){let corners=[[x-w/2,z-d/2],[x+w/2,z-d/2],[x+w/2,z+d/2],[x-w/2,z+d/2]],base=corners.map(q=>project(q[0],0,q[1],c)),top=corners.map(q=>project(q[0],h,q[1],c));if(base.some(p=>!p)||top.some(p=>!p))return;poly([base[0],base[1],top[1],top[0]],shade(color,-18));poly([base[1],base[2],top[2],top[1]],shade(color,-35));poly(top,color);ctx.strokeStyle='#d9e2dc55';ctx.lineWidth=1;for(let i=0;i<3;i++){let a=top[i],b=top[(i+1)%4];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
+function shade(hex,n){let v=parseInt(hex.slice(1),16),r=clamp((v>>16)+n,0,255),g=clamp(((v>>8)&255)+n,0,255),b=clamp((v&255)+n,0,255);return `rgb(${r},${g},${b})`}
+function drawWorld(c){drawGround(c);let buildings=[];for(let gx=0;gx<12;gx++)for(let gz=0;gz<12;gz++){let bx=gx*BLK+BLK/2,bz=gz*BLK+BLK/2;if(Math.hypot(bx-player.x,bz-player.z)>1150)continue;let ox=(gx%2?25:-25),oz=(gz%2?18:-18);buildings.push({x:bx+ox,z:bz+oz,w:70+((gx+gz)%3)*12,d:68+((gx*2+gz)%3)*10,h:80+((gx*17+gz*31)%180),color:['#9c9a8d','#7e8b8c','#b5a58d','#758184','#a9ada5'][(gx*7+gz*3)%5]})}
+ buildings.sort((a,b)=>Math.hypot(b.x-player.x,b.z-player.z)-Math.hypot(a.x-player.x,a.z-player.z));for(let b of buildings)drawBuilding(b.x,b.z,b.w,b.d,b.h,b.color,c);
+}
+function drawActor(x,z,y,size,color,c,angle=0,kind='person'){let p=project(x,y,z,c);if(!p)return;let s=p.s*size;if(s<.3)return;ctx.save();ctx.translate(p.x,p.y);ctx.scale(s,s);if(kind==='car'){ctx.rotate(angle-player.a);ctx.fillStyle='#111';ctx.fillRect(-18,-9,40,21);ctx.fillStyle=color;ctx.fillRect(-20,-12,40,21);ctx.fillStyle='#29414b';ctx.fillRect(-10,-9,20,15);ctx.fillStyle='#e6e4d8';ctx.fillRect(14,-9,4,4);ctx.fillRect(14,4,4,4);if(color==='#f0f0ec'){ctx.fillStyle='#df3434';ctx.fillRect(-2,-14,8,3);ctx.fillStyle='#287be2';ctx.fillRect(6,-14,8,3)}}else{ctx.fillStyle='#0007';ctx.beginPath();ctx.ellipse(0,2,7,3,0,0,7);ctx.fill();ctx.fillStyle=color;ctx.fillRect(-5,-20,10,19);ctx.fillStyle='#d8ad8d';ctx.beginPath();ctx.arc(0,-24,5,0,7);ctx.fill()}ctx.restore()}
+function render(){let c=camera();drawWorld(c);let list=[];for(let v of cars)list.push({d:Math.hypot(v.x-player.x,v.z-player.z),fn:()=>drawActor(v.x,v.z,8,40,v.pol?'#f0f0ec':v.color,c,v.a,'car')});for(let n of npcs)list.push({d:Math.hypot(n.x-player.x,n.z-player.z),fn:()=>drawActor(n.x,n.z,5,35,n.type==='thief'?'#b83d32':n.color,c,n.a)});for(let p of police)list.push({d:Math.hypot(p.x-player.x,p.z-player.z),fn:()=>drawActor(p.x,p.z,5,36,'#f0f0ec',c,p.a)});list.sort((a,b)=>b.d-a.d);list.forEach(v=>{if(v.d<1000)v.fn()});
+ // player third-person avatar, centered lower screen
+ if(!player.car){let px=W/2,py=H*.73;ctx.fillStyle='#0008';ctx.beginPath();ctx.ellipse(px,py+7,14,7,0,0,7);ctx.fill();ctx.fillStyle='#263f60';ctx.fillRect(px-10,py-28,20,29);ctx.fillStyle='#d5a27e';ctx.beginPath();ctx.arc(px,py-35,8,0,7);ctx.fill();ctx.fillStyle='#111a20';ctx.fillRect(px-8,py-43,14,5);ctx.fillStyle='#b6d4d8';ctx.fillRect(px-3,py-18,6,9)}
+ for(let b of shots){let p=project(b.x,0,b.z,c);if(p){ctx.fillStyle='#ffe58b';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill()}}
+ drawMap();
+}
+function drawMap(){mx.fillStyle='#24342d';mx.fillRect(0,0,120,120);mx.save();mx.translate(60-player.x/SIZE*120,60-player.z/SIZE*120);mx.scale(120/SIZE,120/SIZE);mx.fillStyle='#626b69';for(let i=0;i<12;i++){mx.fillRect(i*BLK+BLK/2-ROAD/2,0,ROAD,SIZE);mx.fillRect(0,i*BLK+BLK/2-ROAD/2,SIZE,ROAD)}mx.fillStyle='#e4e0c9';for(let c of cars)mx.fillRect(c.x-10,c.z-10,20,20);mx.fillStyle='#ff5448';for(let n of npcs)if(n.type==='thief')mx.fillRect(n.x-9,n.z-9,18,18);mx.fillStyle='#55aaff';for(let p of police)mx.fillRect(p.x-9,p.z-9,18,18);mx.fillStyle='#8ff0b5';mx.beginPath();mx.arc(player.x,player.z,20,0,7);mx.fill();mx.restore()}
+function loop(t){let dt=Math.min((t-last)/1000||0,.04);last=t;if(started)update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+document.getElementById('go').onclick=()=>{started=true;document.getElementById('start').style.display='none';toast('به آزادشهر خوش اومدی')};
+addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(k==='e')enterCar();if(k===' '){fire();e.preventDefault()}if(k==='shift')sprint=true;if(k==='w'||k==='arrowup')joy.y=-1;if(k==='s'||k==='arrowdown')joy.y=1;if(k==='a'||k==='arrowleft')joy.x=-1;if(k==='d'||k==='arrowright')joy.x=1});
+addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(k==='shift')sprint=false;if(['w','s','arrowup','arrowdown'].includes(k))joy.y=0;if(['a','d','arrowleft','arrowright'].includes(k))joy.x=0});
+stats();
+})();
+</script></body></html>
