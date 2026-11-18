@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#080e18"><title>AZAD SHAHR — Open World</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080e18;color:#fff;font-family:Tahoma,Arial,sans-serif;touch-action:none}canvas{display:block;width:100%;height:100%;outline:0}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080e18;color:#fff;font-family:Tahoma,Arial,sans-serif;touch-action:none;overscroll-behavior:none}canvas{display:block;width:100%;height:100%;outline:0}
 #game{position:fixed;inset:0;background:linear-gradient(#7ba7c8,#d8c6a2)}#hud{position:absolute;inset:0;pointer-events:none}
 .top{position:absolute;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .panel{background:#08111ddd;border:1px solid #ffffff24;backdrop-filter:blur(12px);border-radius:14px;padding:9px 12px;box-shadow:0 8px 28px #0005}.brand{font-size:12px;letter-spacing:2px;color:#a9d7ff;font-weight:bold}.mission{font-size:12px;margin-top:5px;color:#eaf3fb}.stats{display:flex;gap:7px;direction:ltr}.stat{min-width:64px;text-align:center;font-size:10px;color:#9fb3c9}.stat b{display:block;font-size:14px;color:white;margin-top:3px}
@@ -25,10 +25,10 @@
 @media(max-height:430px){.stick{width:100px;height:100px}.nub{left:29px;top:29px}.actions{grid-template-columns:repeat(2,58px)}.action{width:58px;height:48px}.top{top:7px}.panel{padding:6px 9px}#map{width:66px;height:66px}}
 </style></head>
 <body><div id="game"><canvas id="view"></canvas></div>
-<div id="hud"><div class="top"><div class="panel"><div class="brand">AZAD SHAHR / OPEN WORLD</div><div class="mission" id="mission">به شهر آزاد خوش آمدی — در شهر گشت بزن</div></div><div class="stats"><div class="panel stat">سرعت<b id="speed">۰ km/h</b></div><div class="panel stat">وضعیت<b id="mode">پیاده</b></div><canvas id="map" width="160" height="160"></canvas></div></div><div id="hint">با جوی‌استیک حرکت کن · دوربین با کشیدن صفحه می‌چرخد</div>
+<div id="hud"><div class="top"><div class="panel"><div class="brand">AZAD SHAHR / OPEN WORLD</div><div class="mission" id="mission">به شهر آزاد خوش آمدی — در شهر گشت بزن</div></div><div class="stats"><div class="panel stat">سرعت<b id="speed">۰ km/h</b></div><div class="panel stat">وضعیت<b id="mode">پیاده</b></div><canvas id="map" width="160" height="160"></canvas></div></div><div id="hint">جوی‌استیک: حرکت · کشیدن صفحه: چرخش دوربین · فاصله دوربین ثابت</div>
 <div id="controls"><div class="stick" id="joy"><div class="nub" id="nub"></div></div><div class="actions"><button class="action" id="run">دویدن</button><button class="action primary" id="use">سوار / پیاده</button><button class="action" id="jump">پرش</button><button class="action" id="fire">شلیک</button></div></div><div id="toast"></div></div>
 <div id="rotate"><div class="card"><span class="phone">▯</span><h2>گوشی را افقی کن</h2><p>این بازی برای نمایشگر افقی طراحی شده است</p></div></div>
-<div id="start"><div class="startcard"><div class="brand">V2GURD GAME STUDIO PRESENTS</div><h1>AZAD SHAHR</h1><p>یک شهر سه‌بعدی آزاد برای گشت‌وگذار. رانندگی کن، پیاده شو و شهر را کشف کن.<br>نسخه آزمایشی آفلاین — کنترل لمسی و دوربین سوم‌شخص</p><button id="play">ورود به شهر</button></div></div>
+<div id="start"><div class="startcard"><div class="brand">V2GURD GAME STUDIO PRESENTS</div><h1>AZAD SHAHR</h1><p>شهر سه‌بعدی آزاد با عابرهای متحرک، مغازه‌ها و رانندگی. با دو انگشت زوم کن و دوربین را بچرخان.<br>نسخه آزمایشی آفلاین — کنترل لمسی و دوربین سوم‌شخص</p><button id="play">ورود به شهر</button></div></div>
 <script>
 (()=>{
 'use strict';
@@ -90,26 +90,73 @@ for(let i=0;i<28;i++)people.push({x:(Math.random()-.5)*190,z:(Math.random()-.5)*
 let keys={},joy={x:0,y:0},last=0,started=false;
 function dynamicMesh(){
  let v=[],c=[];const oldV=verts,oldC=colors;verts=v;colors=c;
- // player or car
- if(!car.active){
-  box(player.x,player.y,player.z,.72,1.25,.42,[.08,.25,.52]);sphere(player.x,player.y+1.55,player.z,.28,[.78,.57,.42]);
-  box(player.x-.22,player.y+.0,player.z,.2,.48,.24,[.12,.14,.19]);box(player.x+.22,player.y+.0,player.z,.2,.48,.24,[.12,.14,.19]);
- }else{
-  box(car.x,.35,car.z,2.15,.65,3.9,[.72,.12,.09]);box(car.x,.9,car.z-.25,1.65,.75,1.8,[.12,.24,.31]);
-  for(let sx of [-1,1])for(let sz of [-1,1]){cylinder(car.x+sx*1,0,car.z+sz*1.25,.38,.18,[.04,.05,.06],10);}
+ const now=performance.now()/1000;
+ function point(x,y,z,ang){return [x*Math.cos(ang)+z*Math.sin(ang),y,-x*Math.sin(ang)+z*Math.cos(ang)]}
+ function limb(a,b,r,col){ // tapered-looking articulated limb built from an oriented box
+   let d=sub(b,a),len=Math.hypot(...d),mid=a.map((q,i)=>(q+b[i])/2);
+   let up=norm(d),right=norm(cross([0,0,1],up)); if(Math.hypot(...right)<.01)right=[1,0,0];
+   let forward=norm(cross(up,right));
+   let corners=[];
+   for(let yy of [-len/2,len/2])for(let xx of [-r,r])for(let zz of [-r*.78,r*.78])
+     corners.push([mid[0]+up[0]*yy+right[0]*xx+forward[0]*zz,mid[1]+up[1]*yy+right[1]*xx+forward[1]*zz,mid[2]+up[2]*yy+right[2]*xx+forward[2]*zz]);
+   let q=corners;quad(q[0],q[1],q[3],q[2],shade(col,.78));quad(q[4],q[6],q[7],q[5],shade(col,1.12));quad(q[0],q[4],q[5],q[1],col);quad(q[2],q[3],q[7],q[6],shade(col,.9));quad(q[0],q[2],q[6],q[4],shade(col,.95));quad(q[1],q[5],q[7],q[3],shade(col,1.05));
  }
- // pedestrians
- for(let p of people){box(p.x,.05,p.z,.45,.95,.35,p.criminal?[.48,.12,.13]:[.14,.34,.25]);sphere(p.x,1.18,p.z,.2,[.72,.52,.38]);}
- for(let s of shots){sphere(s.x,.7,s.z,.12,[1,.75,.25]);}
+ function person(x,z,ang,phase,shirt,pants,walking=true){
+   let stride=walking?Math.sin(now*5+phase)*.34:0,arm=walking?Math.sin(now*5+phase+Math.PI)*.28:0;
+   let local=(a)=>{let q=point(a[0],a[1],a[2],ang);return [x+q[0],q[1],z+q[2]]};
+   let hip=[0,.83,0],shoulder=[0,1.35,0],head=[0,1.72,0];
+   // torso, neck, head, hair and facial details
+   let torso=local([0,1.13,0]);box(torso[0],torso[1],torso[2],.48,.62,.28,shirt);
+   cylinder(...local([0,1.46,0]),.075,.12,[.67,.43,.31],8);
+   sphere(...local(head),.205,[.72,.51,.39]);sphere(...local([0,1.86,-.035]),.21,[.12,.075,.045]);
+   // face facing direction
+   box(...[...local([-.07,1.73,.177]),.055,.035,.025],[.08,.08,.07]);
+   box(...[...local([.07,1.73,.177]),.055,.035,.025],[.08,.08,.07]);
+   // legs swing opposite
+   for(let s of [-1,1]){
+     let a=local([s*.13,.82,0]),k=local([s*.14,.43,stride*s]),foot=local([s*.14,.12,stride*s+.09]);
+     limb(a,k,.105,pants);limb(k,foot,.085,[.12,.13,.15]);box(...[...foot,.18,.12,.32],[.07,.075,.08]);
+     let sh=local([s*.29,1.35,0]),el=local([s*.32,1.02,arm*s]),hand=local([s*.3,.88,arm*s+.04]);
+     limb(sh,el,.075,shirt);limb(el,hand,.06,[.68,.48,.36]);sphere(...hand,.07,[.7,.5,.38]);
+   }
+ }
+ if(!car.active){
+   person(player.x,player.z,player.ang,0,[.08,.24,.56],[.09,.11,.16],Math.abs(joy.x)+Math.abs(joy.y)>.08||run);
+ }else{
+   // car body and cabin
+   box(car.x,.38,car.z,2.25,.62,4.25,[.68,.09,.055]);box(car.x,.88,car.z-.2,1.72,.78,2.05,[.1,.22,.29]);
+   box(car.x,.46,car.z+2.12,1.9,.18,.08,[.95,.76,.32]);box(car.x,.46,car.z-2.12,1.9,.18,.08,[.9,.08,.05]);
+   // four wheels: rubber, hub caps and steering angle
+   for(let sx of [-1,1])for(let sz of [-1,1]){
+     let wx=car.x+sx*1.05,wz=car.z+sz*1.35,steer=sz>0?Math.atan(car.speed*.035):0;
+     box(wx,.38,wz,.32,.68,.72,[.035,.04,.045]);
+     box(wx+sx*.17,.38,wz,.055,.36,.38,[.52,.55,.57]);
+     for(let k=0;k<5;k++){let a=k*Math.PI*2/5;box(wx+sx*.205,.38+Math.sin(a)*.12,wz+Math.cos(a)*.12,.035,.045,.045,[.8,.82,.83]);}
+   }
+ }
+ // varied pedestrians and a few visibly distinct criminals
+ for(let p of people)person(p.x,p.z,p.ang,p.t,p.criminal?[.42,.075,.07]:[.12,.34,.22],[.12,.13,.16],true);
+ // projectile tracers
+ for(let s of shots){sphere(s.x,.9,s.z,.09,[1,.72,.18]);}
+ // storefronts placed along road edges with awnings, glass doors, display windows and signs
+ for(let i=-2;i<=2;i++){
+   let x=i*40+12,z= -17.2;
+   box(x,.95,z,10,1.9,.22,[.08,.22,.27]);box(x,2.05,z-.08,11,.42,.35,[.12,.27,.38]);
+   box(x,2.08,z-.28,8,.22,.05,[.94,.76,.39]);
+   box(x-2.4,.95,z-.15,2.2,1.55,.12,[.16,.38,.45]);box(x+2.4,.95,z-.15,2.2,1.55,.12,[.16,.38,.45]);
+   box(x,.92,z-.22,.8,1.72,.1,[.07,.14,.19]);box(x,.95,z-.29,.08,.08,.05,[.85,.72,.38]);
+   // striped awning canopy
+   for(let k=-4;k<=4;k++)box(x+k*.95,1.92,z-.62,.82,.16,.95,k%2?[.82,.17,.12]:[.92,.82,.64]);
+ }
  verts=oldV;colors=oldC;return [new Float32Array(v),new Float32Array(c)];
 }
 function drawMesh(v,c){if(!v.length)return;let b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,v,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(loc.p);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);let d=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,d);gl.bufferData(gl.ARRAY_BUFFER,c,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(loc.c);gl.vertexAttribPointer(loc.c,3,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLES,0,v.length/3);gl.deleteBuffer(b);gl.deleteBuffer(d)}
 function toast(t){let e=document.getElementById('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.tm);toast.tm=setTimeout(()=>e.style.opacity=0,1700)}
 function update(dt){
- let forward=-(joy.y||((keys.ArrowUp||keys.w)?1:0)-((keys.ArrowDown||keys.s)?1:0)),side=joy.x||((keys.ArrowRight||keys.d)?1:0)-((keys.ArrowLeft||keys.a)?1:0);
+ let forward=-(joy.y||((keys.ArrowUp||keys.w)?1:0)-((keys.ArrowDown||keys.s)?1:0)),side=(joy.x!==0?-joy.x:0)||((keys.ArrowRight||keys.d)?1:0)-((keys.ArrowLeft||keys.a)?1:0);
  let boost=run||keys.Shift,turn=side*.0;
- if(car.active){car.ang+=side*dt*1.5;car.speed+=(forward*19-car.speed)*Math.min(1,dt*2.4);car.x+=Math.sin(car.ang)*car.speed*dt;car.z+=Math.cos(car.ang)*car.speed*dt;car.speed*=Math.pow(.985,dt*60);player.x=car.x;player.z=car.z;document.getElementById('speed').textContent=Math.round(Math.abs(car.speed)*4)+' km/h';}
- else{let sp=boost?8:4.5;let dx=Math.sin(cameraYaw)*forward+Math.cos(cameraYaw)*side, dz=Math.cos(cameraYaw)*forward-Math.sin(cameraYaw)*side;let l=Math.hypot(dx,dz)||1;player.x+=dx/l*sp*dt;player.z+=dz/l*sp*dt;player.ang=Math.atan2(dx,dz);player.x=clamp(player.x,-119,119);player.z=clamp(player.z,-119,119);document.getElementById('speed').textContent='۰ km/h';}
+ if(car.active){car.ang+=side*dt*(.65+Math.min(1,Math.abs(car.speed)/8)*1.5)*Math.sign(car.speed||1);car.speed+=(forward*23-car.speed)*Math.min(1,dt*2.1);car.x+=Math.sin(car.ang)*car.speed*dt;car.z+=Math.cos(car.ang)*car.speed*dt;car.speed*=Math.pow(.985,dt*60);player.x=car.x;player.z=car.z;document.getElementById('speed').textContent=Math.round(Math.abs(car.speed)*4)+' km/h';}
+ else{let sp=boost?8:4.5;let dx=Math.sin(cameraYaw)*forward-Math.cos(cameraYaw)*side, dz=Math.cos(cameraYaw)*forward+Math.sin(cameraYaw)*side;let l=Math.hypot(dx,dz)||1;player.x+=dx/l*sp*dt;player.z+=dz/l*sp*dt;if(Math.hypot(dx,dz)>.08)player.ang=Math.atan2(dx,dz);player.x=clamp(player.x,-119,119);player.z=clamp(player.z,-119,119);document.getElementById('speed').textContent='۰ km/h';}
  if(jump&&player.y===0)player.vy=7.5;jump=false;player.vy-=18*dt;player.y=Math.max(0,player.y+player.vy*dt);if(player.y===0)player.vy=0;
  for(let p of people){p.t+=dt;if(Math.random()<.01)p.ang+=(Math.random()-.5)*2;p.x+=Math.sin(p.ang)*dt*.7;p.z+=Math.cos(p.ang)*dt*.7;if(p.criminal&&Math.hypot(p.x-player.x,p.z-player.z)<12&&Math.random()<.03)toast('مراقب باش! فرد مشکوک نزدیک توست');}
  shots=shots.filter(s=>{s.x+=s.dx*dt*25;s.z+=s.dz*dt*25;s.life-=dt;return s.life>0});
@@ -121,7 +168,7 @@ function frame(t){let dt=Math.min(.04,(t-last)/1000||.016);last=t;if(started)upd
  let target=car.active?[car.x,1,car.z]:[player.x,1+player.y,player.z],yaw=cameraYaw+(car.active?car.ang:player.ang)*.12;
  let eye=[target[0]-Math.sin(yaw)*camDist*Math.cos(cameraPitch),target[1]+camDist*Math.sin(cameraPitch)+2,target[2]-Math.cos(yaw)*camDist*Math.cos(cameraPitch)];
  let vp=matMul(perspective(PI/3,w/h,.1,250),look(eye,target,[0,1,0]));gl.uniformMatrix4fv(loc.vp,false,vp);
- gl.clearColor(.48,.66,.77,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.enableVertexAttribArray(loc.p);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,cb);gl.enableVertexAttribArray(loc.c);gl.vertexAttribPointer(loc.c,3,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLES,0,staticV.length/3);
+ gl.clearColor(.48,.66,.77,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.enableVertexAttribArray(loc.p);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,cb);gl.enableVertexAttribArray(loc.c);gl.vertexAttribPointer(loc.c,3,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLES,0,staticV.length/3);
  let [dv,dc]=dynamicMesh();drawMesh(dv,dc);minimap();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 document.getElementById('play').onclick=()=>{started=true;document.getElementById('start').style.display='none';toast('به شهر آزاد خوش آمدی')};
@@ -131,6 +178,7 @@ document.getElementById('use').onclick=()=>{if(!car.active&&Math.hypot(player.x-
 const joyEl=document.getElementById('joy'),nub=document.getElementById('nub');let joyId=null;
 joyEl.onpointerdown=e=>{joyId=e.pointerId;joyEl.setPointerCapture(joyId);moveJoy(e)};joyEl.onpointermove=e=>{if(e.pointerId===joyId)moveJoy(e)};joyEl.onpointerup=e=>{if(e.pointerId===joyId){joyId=null;joy.x=joy.y=0;nub.style.transform='translate(0,0)'}};joyEl.onpointercancel=joyEl.onpointerup;
 function moveJoy(e){let r=joyEl.getBoundingClientRect(),x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2),l=Math.hypot(x,y),m=37;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;nub.style.transform=`translate(${x}px,${y}px)`}
+const camDist=8; // fixed camera distance; zoom is locked
 let drag=null;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,id:e.pointerId}});canvas.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId){let dx=e.clientX-drag.x;cameraYaw-=dx*.008;cameraPitch=clamp(cameraPitch+(e.clientY-drag.y)*.003,-.1,.65);drag.x=e.clientX;drag.y=e.clientY}});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){jump=true;e.preventDefault()}if(e.key.toLowerCase()==='e')document.getElementById('use').click();if(e.key.toLowerCase()==='f')fire=true});window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key.toLowerCase()==='f')fire=false});
 })();
