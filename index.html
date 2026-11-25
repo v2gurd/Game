@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>NEON DRIVE ULTRA</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800;900&display=swap');
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050a12;color:#fff;font-family:Vazirmatn,system-ui;touch-action:none}#view{position:fixed;inset:0}
@@ -26,25 +34,15 @@ h1{font-size:clamp(36px,9vw,64px);letter-spacing:5px;margin:0;color:#69dfff;text
 let THREE, GLTFLoader;
 const bootStatus = document.querySelector('#loadText');
 async function importEngine(){
-  const sources = [
-    'https://cdn.jsdelivr.net/npm/three@0.160.0',
-    'https://unpkg.com/three@0.160.0'
-  ];
-  let lastError;
-  for(const base of sources){
-    try{
-      THREE = await import(base + '/build/three.module.js');
-      ({GLTFLoader} = await import(base + '/examples/jsm/loaders/GLTFLoader.js'));
-      return;
-    }catch(err){lastError=err;console.warn('Engine CDN failed:',base,err);}
-  }
-  throw lastError || new Error('Three.js could not be imported');
+  // Import map resolves the bare `three` dependency used inside GLTFLoader.
+  THREE = await import('three');
+  ({GLTFLoader} = await import('three/addons/loaders/GLTFLoader.js'));
 }
 try{
   await importEngine();
 }catch(err){
-  console.error(err);
-  bootStatus.innerHTML = 'موتور سه‌بعدی از CDN بارگذاری نشد.<br>اتصال اینترنت یا دسترسی به jsDelivr و unpkg را بررسی کن و دوباره تلاش کن.<br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
+  console.error('Three.js module loading failed:',err);
+  bootStatus.innerHTML = 'بارگذاری موتور سه‌بعدی ناموفق بود.<br>احتمالاً دسترسی Safari به jsDelivr مسدود است یا اینترنت قطع شده.<br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
   throw err;
 }
 
