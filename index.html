@@ -59,18 +59,8 @@ const loader=new GLTFLoader();let player=null,city=null,carTemplate=null;const t
 const loadText=document.querySelector('#loadText');
 // Prefer GitHub-backed CDNs instead of threejs.org, which may be blocked
 // on some mobile networks. Try several independent hosts for each real GLB.
-const MODEL_CAR_URLS=[
- 'https://www.inf.u-szeged.hu/~tanacs/threejs/examples/models/gltf/ferrari.glb',
- 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/ferrari.glb',
- 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/ferrari.glb',
- 'https://threejs.org/examples/models/gltf/ferrari.glb'
-];
-const MODEL_CITY_URLS=[
- 'https://www.inf.u-szeged.hu/~tanacs/threejs/examples/models/gltf/LittlestTokyo.glb',
- 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/LittlestTokyo.glb',
- 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/LittlestTokyo.glb',
- 'https://threejs.org/examples/models/gltf/LittlestTokyo.glb'
-];
+const MODEL_CAR_URLS=['./assets/ferrari.glb'];
+const MODEL_CITY_URLS=['./assets/LittlestTokyo.glb'];
 const HDR='https://threejs.org/examples/textures/equirectangular/royal_esplanade_1k.hdr';
 function ground(){
  const asphalt=new THREE.Mesh(new THREE.PlaneGeometry(26,1800),new THREE.MeshStandardMaterial({color:0x252b32,roughness:.88}));asphalt.rotation.x=-Math.PI/2;asphalt.position.z=-500;asphalt.receiveShadow=true;scene.add(asphalt);
@@ -124,7 +114,7 @@ try{
  });
 }catch(err){
  console.error('All Ferrari mirrors failed:',err);
- loadText.innerHTML='مدل ماشین از هیچ‌کدام از سرورهای جایگزین دریافت نشد.<br>این مشکل معمولاً از محدودیت شبکه یا فیلتر CDN است، نه از صفحه بازی.<br><small style="color:#9db8ca">برای حذف وابستگی به اینترنت، فایل GLB باید مستقیماً داخل مخزن GitHub قرار بگیرد.</small><br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
+ loadText.innerHTML='فایل مدل ماشین در مخزن پیدا نشد یا قابل خواندن نیست.<br>باید فایل <b>assets/ferrari.glb</b> را کنار index.html در مخزن قرار بدهی.<br><small style="color:#9db8ca">برای شهر هم فایل assets/LittlestTokyo.glb لازم است.</small><br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
  document.querySelector('#loading').style.display='grid';
 }
 let keys={left:false,right:false,gas:false,brake:false,boost:false,drift:false};
