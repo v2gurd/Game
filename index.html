@@ -280,6 +280,10 @@ scene.traverse(o=>{
 // ensure road dashes and city geometry scroll, while ground and road remain fixed
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started&&!paused)togglePause();});
+// The loading splash must disappear after the Three.js scene is initialized.
+// Previously it sat above the start screen and blocked the Start button forever.
+const loadingScreen=document.getElementById('loading');
+if(loadingScreen){loadingScreen.style.opacity='0';setTimeout(()=>loadingScreen.remove(),650);}
 </script>
 </body>
 </html>
