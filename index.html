@@ -57,8 +57,18 @@ scene.add(new THREE.HemisphereLight(0xcde9ff,0x273442,1.65));
 const sun=new THREE.DirectionalLight(0xffdfbd,3.1);sun.position.set(-80,130,70);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
 const loader=new GLTFLoader();let player=null,city=null,carTemplate=null;const traffic=[];
 const loadText=document.querySelector('#loadText');
-const MODEL_CAR='https://threejs.org/examples/models/gltf/ferrari.glb';
-const MODEL_CITY='https://threejs.org/examples/models/gltf/LittlestTokyo.glb';
+// Prefer GitHub-backed CDNs instead of threejs.org, which may be blocked
+// on some mobile networks. Try several independent hosts for each real GLB.
+const MODEL_CAR_URLS=[
+ 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/ferrari.glb',
+ 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/ferrari.glb',
+ 'https://threejs.org/examples/models/gltf/ferrari.glb'
+];
+const MODEL_CITY_URLS=[
+ 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/LittlestTokyo.glb',
+ 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/LittlestTokyo.glb',
+ 'https://threejs.org/examples/models/gltf/LittlestTokyo.glb'
+];
 const HDR='https://threejs.org/examples/textures/equirectangular/royal_esplanade_1k.hdr';
 function ground(){
  const asphalt=new THREE.Mesh(new THREE.PlaneGeometry(26,1800),new THREE.MeshStandardMaterial({color:0x252b32,roughness:.88}));asphalt.rotation.x=-Math.PI/2;asphalt.position.z=-500;asphalt.receiveShadow=true;scene.add(asphalt);
@@ -79,33 +89,40 @@ function cloneTraffic(){
  clone.rotation.y=Math.PI;clone.userData.trafficSpeed=12+Math.random()*20;scene.add(clone);traffic.push(clone);
 }
 const load=(url)=>new Promise((resolve,reject)=>loader.load(url,resolve,undefined,reject));
-function timedLoad(url,label,timeoutMs=25000){
- loadText.textContent=label;
+function loadWithTimeout(url, timeoutMs=18000){
  return Promise.race([
   load(url),
   new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout: '+url)),timeoutMs))
  ]);
 }
+async function loadAny(urls,label){
+ let lastError;
+ for(let i=0;i<urls.length;i++){
+  loadText.textContent=label+' ('+(i+1)+'/'+urls.length+')';
+  try{return await loadWithTimeout(urls[i]);}
+  catch(err){lastError=err;console.warn('Asset host failed:',urls[i],err);}
+ }
+ throw lastError || new Error('All asset mirrors failed');
+}
 try{
- const carGltf=await timedLoad(MODEL_CAR,'در حال دریافت ماشین Ferrari (حدود ۱.۶ مگابایت)...');
+ const carGltf=await loadAny(MODEL_CAR_URLS,'در حال دریافت مدل واقعی Ferrari');
  carTemplate=carGltf.scene;normalizeModel(carTemplate,4.8);
  player=carTemplate.clone(true);player.position.set(0,0,6);scene.add(player);
- // Start becomes available as soon as the car is ready. A slow city download
- // must never trap the player behind an endless loading screen.
+ // Show the start menu immediately after the car is ready.
  document.querySelector('#loading').style.display='none';
  document.querySelector('#menu').style.display='grid';
  for(let i=0;i<8;i++)cloneTraffic();
- timedLoad(MODEL_CITY,'ماشین آماده شد؛ در حال دریافت محیط شهری...',35000).then(cityGltf=>{
+ loadAny(MODEL_CITY_URLS,'ماشین آماده شد؛ دریافت مدل واقعی شهر').then(cityGltf=>{
    city=cityGltf.scene;normalizeModel(city,95);
    city.position.set(0,0,-150);city.rotation.y=Math.PI;scene.add(city);
    toast('محیط شهری بارگذاری شد');
  }).catch(err=>{
-   console.error('City model failed:',err);
-   toast('مدل شهر دریافت نشد؛ رانندگی در جاده فعال است');
+   console.error('All city mirrors failed:',err);
+   toast('مدل شهر دریافت نشد؛ ماشین آماده رانندگی است');
  });
 }catch(err){
- console.error('Car model failed:',err);
- loadText.innerHTML='مدل ماشین از اینترنت دریافت نشد.<br>احتمالاً CDN در دسترس نیست یا دانلود بیش از ۲۵ ثانیه طول کشیده.<br><small style="color:#9db8ca">آدرس مدل: threejs.org/examples/models/gltf/ferrari.glb</small><br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
+ console.error('All Ferrari mirrors failed:',err);
+ loadText.innerHTML='مدل ماشین از هیچ‌کدام از سرورهای جایگزین دریافت نشد.<br>این مشکل معمولاً از محدودیت شبکه یا فیلتر CDN است، نه از صفحه بازی.<br><small style="color:#9db8ca">برای حذف وابستگی به اینترنت، فایل GLB باید مستقیماً داخل مخزن GitHub قرار بگیرد.</small><br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
  document.querySelector('#loading').style.display='grid';
 }
 let keys={left:false,right:false,gas:false,brake:false,boost:false,drift:false};
