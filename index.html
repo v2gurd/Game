@@ -19,13 +19,34 @@ h1{font-size:clamp(36px,9vw,64px);letter-spacing:5px;margin:0;color:#69dfff;text
 <body>
 <div id="view"></div>
 <div id="loading"><div class="card"><h1>NEON DRIVE</h1><p id="loadText">در حال بارگذاری مدل‌های سه‌بعدی واقعی...</p></div></div>
-<div id="menu"><div class="card"><h1>NEON DRIVE</h1><p>نسخه ULTRA · رانندگی آزاد در شهر سه‌بعدی<br>مدل خودرو و محیط از فایل‌های GLB واقعی بارگذاری می‌شوند.</p><button class="btn" id="start">شروع رانندگی</button></div></div>
+<div id="menu" style="display:none"><div class="card"><h1>NEON DRIVE</h1><p>نسخه ULTRA · رانندگی آزاد در شهر سه‌بعدی<br>مدل خودرو و محیط از فایل‌های GLB واقعی بارگذاری می‌شوند.</p><button class="btn" id="start">شروع رانندگی</button></div></div>
 <div id="hud"><div class="top"><div class="glass logo">NEON DRIVE<small>ULTRA CITY BUILD</small></div><div class="stats"><div class="glass stat"><small>امتیاز</small><b id="score">۰</b></div><div class="glass stat"><small>مسافت</small><b id="distance">۰ m</b></div><div class="glass stat"><small>سرعت</small><b id="speed" class="speed">۰</b><small>KM/H</small></div></div></div><div id="toast"></div><div class="bottom"><div class="glass" style="font-size:10px;color:#bed0df">WASD / جهت‌ها · Space دریفت · Shift نیترو</div><div class="glass nitro">NITRO<div class="bar"><i id="nitroBar"></i></div></div></div></div>
 <div id="controls"><div class="pad"><button class="control" data-k="left" style="grid-column:1;grid-row:1">◀</button><button class="control" data-k="right" style="grid-column:3;grid-row:1">▶</button><button class="control" data-k="drift" style="grid-column:2;grid-row:2">DRIFT</button></div><div class="actions"><button class="control" id="boost" data-k="boost">N₂O</button><button class="control" id="brake" data-k="brake">ترمز</button><button class="control" id="gas" data-k="gas">گاز</button></div></div>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-import {RGBELoader} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/RGBELoader.js';
+let THREE, GLTFLoader;
+const bootStatus = document.querySelector('#loadText');
+async function importEngine(){
+  const sources = [
+    'https://cdn.jsdelivr.net/npm/three@0.160.0',
+    'https://unpkg.com/three@0.160.0'
+  ];
+  let lastError;
+  for(const base of sources){
+    try{
+      THREE = await import(base + '/build/three.module.js');
+      ({GLTFLoader} = await import(base + '/examples/jsm/loaders/GLTFLoader.js'));
+      return;
+    }catch(err){lastError=err;console.warn('Engine CDN failed:',base,err);}
+  }
+  throw lastError || new Error('Three.js could not be imported');
+}
+try{
+  await importEngine();
+}catch(err){
+  console.error(err);
+  bootStatus.innerHTML = 'موتور سه‌بعدی از CDN بارگذاری نشد.<br>اتصال اینترنت یا دسترسی به jsDelivr و unpkg را بررسی کن و دوباره تلاش کن.<br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
+  throw err;
+}
 
 const host=document.querySelector('#view'), scene=new THREE.Scene();
 scene.background=new THREE.Color(0x8da4b7);scene.fog=new THREE.FogExp2(0x91a9bb,.0018);
@@ -60,16 +81,35 @@ function cloneTraffic(){
  clone.rotation.y=Math.PI;clone.userData.trafficSpeed=12+Math.random()*20;scene.add(clone);traffic.push(clone);
 }
 const load=(url)=>new Promise((resolve,reject)=>loader.load(url,resolve,undefined,reject));
+function timedLoad(url,label,timeoutMs=25000){
+ loadText.textContent=label;
+ return Promise.race([
+  load(url),
+  new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout: '+url)),timeoutMs))
+ ]);
+}
 try{
- loadText.textContent='بارگذاری مدل واقعی Ferrari GLB...';
- const carGltf=await load(MODEL_CAR);carTemplate=carGltf.scene;normalizeModel(carTemplate,4.8);
+ const carGltf=await timedLoad(MODEL_CAR,'در حال دریافت ماشین Ferrari (حدود ۱.۶ مگابایت)...');
+ carTemplate=carGltf.scene;normalizeModel(carTemplate,4.8);
  player=carTemplate.clone(true);player.position.set(0,0,6);scene.add(player);
- loadText.textContent='بارگذاری محیط سه‌بعدی شهری...';
- const cityGltf=await load(MODEL_CITY);city=cityGltf.scene;normalizeModel(city,95);
- city.position.set(0,0,-150);city.rotation.y=Math.PI;scene.add(city);
- for(let i=0;i<8;i++)cloneTraffic();
+ // Start becomes available as soon as the car is ready. A slow city download
+ // must never trap the player behind an endless loading screen.
  document.querySelector('#loading').style.display='none';
-}catch(err){console.error(err);loadText.textContent='بارگذاری مدل ناموفق بود. اینترنت و دسترسی به مدل‌های GLB را بررسی کن.';document.querySelector('#loading').style.display='grid';}
+ document.querySelector('#menu').style.display='grid';
+ for(let i=0;i<8;i++)cloneTraffic();
+ timedLoad(MODEL_CITY,'ماشین آماده شد؛ در حال دریافت محیط شهری...',35000).then(cityGltf=>{
+   city=cityGltf.scene;normalizeModel(city,95);
+   city.position.set(0,0,-150);city.rotation.y=Math.PI;scene.add(city);
+   toast('محیط شهری بارگذاری شد');
+ }).catch(err=>{
+   console.error('City model failed:',err);
+   toast('مدل شهر دریافت نشد؛ رانندگی در جاده فعال است');
+ });
+}catch(err){
+ console.error('Car model failed:',err);
+ loadText.innerHTML='مدل ماشین از اینترنت دریافت نشد.<br>احتمالاً CDN در دسترس نیست یا دانلود بیش از ۲۵ ثانیه طول کشیده.<br><small style="color:#9db8ca">آدرس مدل: threejs.org/examples/models/gltf/ferrari.glb</small><br><button class="btn" onclick="location.reload()">تلاش دوباره</button>';
+ document.querySelector('#loading').style.display='grid';
+}
 let keys={left:false,right:false,gas:false,brake:false,boost:false,drift:false};
 let speed=0,score=0,distance=0,nitro=100,started=false,paused=false,toastTimer;
 function toast(t){let e=document.querySelector('#toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.style.opacity=0,900)}
